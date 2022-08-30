@@ -24,18 +24,24 @@
                       )
 
 (defvar gnu-apl--transcription-alist)
+
 (defun gnu-apl--update-key-prefix (symbol new)
   (quail-select-package "APL-Z")
   (quail-install-map
    (let* ((prefix (string new))
+          (double-prefix (concat prefix prefix))
           (gnu-apl--transcription-alist
            (cl-loop for command in gnu-apl--symbols
-                 for key-command = (cl-third command)
-                 append (cl-loop for s in (if (listp key-command)
-                                           key-command
-                                         (list key-command))
-                              collect (cons (concat prefix s)
-                                            (cl-second command))))))
+                    for key-command = (cl-third command)
+                    append (cl-loop for s in (if (listp key-command)
+                                                 key-command
+                                               (list key-command))
+                                    collect (cons (concat prefix s)
+                                                  (cl-second command))))))
+     ;; Ensure that typing the prefix twice enters it literally.
+     ;; (Unless the prefix key is also a suffix, in which case that combination is already bound to something else).
+     (unless (assoc double-prefix gnu-apl--transcription-alist)
+       (push (cons double-prefix prefix) gnu-apl--transcription-alist))
      (quail-map-from-table
       '((default gnu-apl--transcription-alist)))))
   (set-default symbol new))
